@@ -1,0 +1,19 @@
+/* Responsive chat message and input styles for UserChat */
+.chat-message {
+  word-break: break-word;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.chat-input {
+  width: 100%;
+  min-height: 40px;
+  max-height: 120px;
+  resize: vertical;
+  word-break: break-word;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  box-sizing: border-box;
+  padding: 8px;
+  font-size: 1rem;
+}
