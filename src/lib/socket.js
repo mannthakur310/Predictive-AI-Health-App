@@ -7,8 +7,26 @@ let socket;
 export function getSocket() {
   if (!socket) {
     socket = io(SOCKET_URL, {
-      transports: ['websocket'],
-      withCredentials: true
+      transports: ['websocket', 'polling'], // Fallback to polling if websocket fails
+      withCredentials: true,
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      reconnectionAttempts: Infinity,
+      timeout: 20000,
+    });
+    
+    // Connection event handlers for debugging
+    socket.on('connect', () => {
+      console.log('✅ Socket connected:', socket.id);
+    });
+    
+    socket.on('disconnect', (reason) => {
+      console.warn('⚠️ Socket disconnected:', reason);
+    });
+    
+    socket.on('connect_error', (error) => {
+      console.error('❌ Socket connection error:', error.message);
     });
   }
   return socket;

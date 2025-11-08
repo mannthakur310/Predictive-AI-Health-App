@@ -1,120 +1,92 @@
-/* Hospital Finder Styles */
-
-.hospital-marker {
-  cursor: pointer;
-  transition: transform 0.2s ease;
-}
-
-.hospital-marker:hover {
-  transform: scale(1.1);
-}
-
-.marker-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--secondary)));
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  font-size: 16px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  border: 3px solid white;
-  transition: all 0.2s ease;
-}
-
-.hospital-marker:hover .marker-icon {
-  transform: scale(1.15);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
-}
-
-.user-marker {
-  font-size: 36px;
-  cursor: pointer;
-  animation: bounce 2s infinite, pulse 2s infinite;
-  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
-  transition: transform 0.2s ease;
-}
-
-.user-marker:hover {
-  transform: scale(1.2);
-}
-
-@keyframes bounce {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-12px);
-  }
-}
-
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.7;
-  }
-}
-
-/* Mapbox popup styling */
-.mapboxgl-popup-content {
-  padding: 16px;
+.suggestions-list-static {
+  width: 100%;
+  background-color: hsl(var(--card));
+  color: hsl(var(--card-foreground));
+  border: 1px solid hsl(var(--border));
   border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-  min-width: 240px;
+  list-style-type: none;
+  margin: 0;
+  padding: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  max-height: 300px;
+  overflow-y: auto;
 }
 
-.mapboxgl-popup-close-button {
-  font-size: 20px;
-  padding: 4px 8px;
-  color: #666;
+.suggestions-list-static li {
+  padding: 12px 16px;
+  cursor: pointer;
+  border-radius: 8px;
 }
 
-.mapboxgl-popup-close-button:hover {
-  background-color: #f0f0f0;
-  color: #000;
+.suggestions-list-static li:hover {
+  background-color: hsl(var(--accent));
 }
 
-.popup-content {
+/* Popup styling */
+.hospital-popup {
+  padding: 5px;
+  min-width: 220px;
   font-family: inherit;
 }
 
-/* Responsive adjustments */
-@media (max-width: 640px) {
-  .marker-icon {
-    width: 30px;
-    height: 30px;
-    font-size: 14px;
-    border: 2px solid white;
-  }
-  
-  .user-marker {
-    font-size: 30px;
-  }
-  
-  .mapboxgl-popup-content {
-    min-width: 200px;
-    padding: 12px;
-  }
+.hospital-popup h3 {
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: hsl(var(--foreground));
 }
 
-/* Dark mode adjustments */
-@media (prefers-color-scheme: dark) {
-  .mapboxgl-popup-content {
-    background-color: #1f2937;
-    color: #f3f4f6;
-  }
-  
-  .mapboxgl-popup-close-button {
-    color: #9ca3af;
-  }
-  
-  .mapboxgl-popup-close-button:hover {
-    background-color: #374151;
-    color: #f3f4f6;
-  }
+.direction-btn {
+  width: 100%;
+  padding: 12px 16px;
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  border: 1px solid hsl(var(--primary));
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: background-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.18);
+}
+
+.direction-btn:hover {
+  background: hsl(var(--secondary));
+  border-color: hsl(var(--secondary));
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+}
+
+.direction-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+.dark .direction-btn {
+  box-shadow: 0 3px 10px rgba(0,0,0,0.4);
+}
+
+.dark .direction-btn:hover {
+  box-shadow: 0 6px 18px rgba(0,0,0,0.5);
+}
+
+/* General Mapbox popup overrides */
+.mapboxgl-popup-content {
+  padding: 16px;
+  border-radius: 12px;
+  color: #FF6B6B;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  border: 1px solid hsl(var(--border));
+}
+
+.mapboxgl-popup-close-button {
+  font-size: 24px;
+  padding: 4px 8px;
+  color: hsl(var(--muted-foreground));
+}
+
+.mapboxgl-popup-close-button:hover {
+  background-color: hsl(var(--accent));
+  color: hsl(var(--accent-foreground));
+  border-radius: 50%;
 }

@@ -66,8 +66,9 @@ export default function DoctorLobby() {
   })), [pendingByCategory]);
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6">Doctor Panel</h1>
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800">
+      <div className="container mx-auto px-4 py-8">
+        <h1 className="text-2xl font-bold mb-6">Doctor Panel</h1>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
         {cards.map((card) => (
           <div key={card.name} className={`border rounded-xl p-4 cursor-pointer ${activeCategory === card.name ? 'border-primary' : ''}`} onClick={() => setActiveCategory(card.name)}>
@@ -95,8 +96,8 @@ export default function DoctorLobby() {
           </div>
         ))}
       </div>
+      </div>
     </div>
   );
 }
-
 

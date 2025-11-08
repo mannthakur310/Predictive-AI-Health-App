@@ -60,10 +60,11 @@ export default function DoctorChat() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-5xl">
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-bold">Chat with {patientName}</h1>
-        <Button variant="outline" onClick={() => {
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800">
+      <div className="container mx-auto px-4 py-8 max-w-5xl">
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-xl font-bold">Chat with {patientName}</h1>
+          <Button variant="outline" onClick={() => {
           const overlay = document.createElement('div');
           overlay.className = 'fixed inset-0 flex items-center justify-center bg-black/50 z-50';
           const modal = document.createElement('div');
@@ -83,8 +84,8 @@ export default function DoctorChat() {
             endChat(chatId, 'doctor');
             window.location.href = '/';
           };
-        }}>End Chat</Button>
-      </div>
+          }}>End Chat</Button>
+        </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <aside className="order-1 lg:order-1 border rounded-xl p-4 h-auto lg:h-[60vh] overflow-y-auto bg-white/70 dark:bg-gray-800/70">
           {profileLoading && <div className="text-xs text-muted-foreground mb-2">Loading patient profile…</div>}
@@ -187,8 +188,8 @@ export default function DoctorChat() {
           <Button className="w-full" onClick={handleSend}>Send</Button>
         </div>
       </div>
+      </div>
     </div>
   );
 }
-
 

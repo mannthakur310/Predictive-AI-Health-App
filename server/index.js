@@ -4,12 +4,12 @@ import cors from 'cors';
 import { Server } from 'socket.io';
 
 const app = express();
-app.use(cors({ origin: ['http://localhost:5173'], credentials: true }));
+app.use(cors({ origin: ['http://localhost:5173', 'http://localhost:5157'], credentials: true }));
 
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: ['http://localhost:5173'],
+    origin: ['http://localhost:5173', 'http://localhost:5157'],
     methods: ['GET', 'POST']
   }
 });

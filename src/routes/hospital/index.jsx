@@ -1,77 +1,181 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
+import mapboxgl from 'mapbox-gl';
+import 'mapbox-gl/dist/mapbox-gl.css';
+import LocalHospitalIcon from '@mui/icons-material/LocalHospital';
+import MyLocationIcon from '@mui/icons-material/MyLocation';
+import SearchIcon from '@mui/icons-material/Search';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import LocalHospitalIcon from '@mui/icons-material/LocalHospital';
-import SearchIcon from '@mui/icons-material/Search';
-import MyLocationIcon from '@mui/icons-material/MyLocation';
 import './Hospital.css';
 
 const HospitalFinder = () => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [mapLoaded, setMapLoaded] = useState(false);
-  const mapContainerRef = useRef(null);
-  const mapRef = useRef(null);
-  const markersRef = useRef([]);
+  const mapContainer = useRef(null);
+  const map = useRef(null);
+  const [userLocation, setUserLocation] = useState(null);
   const userMarkerRef = useRef(null);
+  const [loading, setLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [suggestions, setSuggestions] = useState([]);
+  const [isSuggestionsVisible, setIsSuggestionsVisible] = useState(false);
+  const [committedSearch, setCommittedSearch] = useState(false);
 
   const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_API_KEY;
 
   // Initialize map
   useEffect(() => {
-    if (!mapContainerRef.current || mapLoaded) return;
+    if (!MAPBOX_TOKEN || map.current || !mapContainer.current) return;
 
-    const script = document.createElement('script');
-    script.src = 'https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.js';
-    script.async = true;
-    
-    const link = document.createElement('link');
-    link.href = 'https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.css';
-    link.rel = 'stylesheet';
+    mapboxgl.accessToken = MAPBOX_TOKEN;
 
-    script.onload = () => {
-      if (window.mapboxgl && MAPBOX_TOKEN) {
-        window.mapboxgl.accessToken = MAPBOX_TOKEN;
-        
-        // Default center - India (New Delhi)
-        mapRef.current = new window.mapboxgl.Map({
-          container: mapContainerRef.current,
-          style: 'mapbox://styles/mapbox/streets-v12',
-          center: [77.2090, 28.6139], // New Delhi, India
-          zoom: 5
-        });
+    map.current = new mapboxgl.Map({
+      container: mapContainer.current,
+      style: 'mapbox://styles/mapbox/streets-v12',
+      center: [77.209, 28.6139], // Default to New Delhi
+      zoom: 12,
+    });
 
-        mapRef.current.addControl(new window.mapboxgl.NavigationControl(), 'top-right');
-        setMapLoaded(true);
-      }
-    };
+    map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
-    document.head.appendChild(link);
-    document.body.appendChild(script);
+    map.current.on('load', () => {
+      map.current.on('click', 'poi-label', (e) => {
+        if (e.features.length > 0) {
+          const feature = e.features[0];
+          const coordinates = feature.geometry.coordinates.slice();
+          const name = feature.properties.name || 'Unknown Location';
+          const category = feature.properties.class || '';
+
+          const medicalKeywords = ['hospital', 'clinic', 'medical', 'health', 'emergency', 'doctor'];
+          const isHealthcare = medicalKeywords.some(
+            (keyword) =>
+              name.toLowerCase().includes(keyword) || category.toLowerCase().includes(keyword)
+          );
+
+          if (!isHealthcare) return;
+
+          while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+            coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+          }
+
+          const popupContent = `
+            <div class="hospital-popup">
+              <h3>${name}</h3>
+              <button class="direction-btn" onclick="window.openGoogleMaps(${
+                coordinates[1]
+              }, ${coordinates[0]}, '${name.replace(/'/g, "\\'")}')">
+                Get Directions on Google Maps
+              </button>
+            </div>
+          `;
+
+          new mapboxgl.Popup().setLngLat(coordinates).setHTML(popupContent).addTo(map.current);
+        }
+      });
+
+      map.current.on('mouseenter', 'poi-label', () => {
+        map.current.getCanvas().style.cursor = 'pointer';
+      });
+
+      map.current.on('mouseleave', 'poi-label', () => {
+        map.current.getCanvas().style.cursor = '';
+      });
+    });
 
     return () => {
-      if (mapRef.current) {
-        mapRef.current.remove();
+      if (map.current) {
+        map.current.remove();
+        map.current = null;
       }
     };
   }, [MAPBOX_TOKEN]);
 
-  // Get user's current location
+  // Handle search query changes and fetch suggestions
+  useEffect(() => {
+    // If a search has been committed, suppress suggestions
+    if (committedSearch) {
+      setIsSuggestionsVisible(false);
+      return;
+    }
+
+    if (searchQuery.trim().length > 2) {
+      const fetchSuggestions = async () => {
+        const response = await fetch(
+          `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(
+            searchQuery
+          )}.json?access_token=${MAPBOX_TOKEN}&autocomplete=true`
+        );
+        const data = await response.json();
+        setSuggestions(data.features || []);
+        setIsSuggestionsVisible(true);
+      };
+      const debounce = setTimeout(fetchSuggestions, 300);
+      return () => clearTimeout(debounce);
+    } else {
+      setSuggestions([]);
+      setIsSuggestionsVisible(false);
+    }
+  }, [searchQuery, MAPBOX_TOKEN, committedSearch]);
+
+  // Handle location selection from search or GPS
+  const handleLocationSelect = (lat, lng, name) => {
+    setSearchQuery(name);
+    setSuggestions([]);
+    setIsSuggestionsVisible(false);
+    setCommittedSearch(true);
+    setUserLocation([lng, lat]);
+
+    if (userMarkerRef.current) {
+      userMarkerRef.current.remove();
+    }
+
+    userMarkerRef.current = new mapboxgl.Marker({ color: '#FF0000' })
+      .setLngLat([lng, lat])
+      .setPopup(new mapboxgl.Popup().setHTML(`<h3>${name}</h3>`))
+      .addTo(map.current);
+
+    map.current.flyTo({
+      center: [lng, lat],
+      zoom: 14,
+      essential: true,
+    });
+    setLoading(false);
+  };
+  
+  // Handle search button click
+  const handleSearch = () => {
+    setIsSuggestionsVisible(false);
+    setCommittedSearch(true);
+      if (suggestions.length > 0) {
+          const firstSuggestion = suggestions[0];
+          handleLocationSelect(firstSuggestion.center[1], firstSuggestion.center[0], firstSuggestion.place_name);
+      } else if (searchQuery.trim()) {
+          // If no suggestions, just geocode the raw query
+          const geocode = async () => {
+              setLoading(true);
+              const response = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(searchQuery)}.json?access_token=${MAPBOX_TOKEN}&limit=1`);
+              const data = await response.json();
+              if (data.features && data.features.length > 0) {
+                  const feature = data.features[0];
+                  handleLocationSelect(feature.center[1], feature.center[0], feature.place_name);
+              } else {
+                  alert("Location not found. Please try a different search term.");
+                  setLoading(false);
+              }
+          };
+          geocode();
+      }
+  };
+
+  // Get user's current GPS location
   const handleGetCurrentLocation = () => {
     setLoading(true);
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          const { latitude, longitude } = position.coords;
-          if (mapRef.current) {
-            mapRef.current.flyTo({ center: [longitude, latitude], zoom: 13 });
-            addUserMarker(latitude, longitude);
-            searchNearbyHospitals(latitude, longitude);
-          }
+          handleLocationSelect(position.coords.latitude, position.coords.longitude, "Your Current Location");
         },
         (error) => {
           console.error('Error getting location:', error);
-          alert('Unable to get your location. Please enter your location manually.');
+          alert('Unable to get your location. Please ensure location services are enabled.');
           setLoading(false);
         }
       );
@@ -81,100 +185,21 @@ const HospitalFinder = () => {
     }
   };
 
-  // Search for hospitals by location
-  const handleSearch = async () => {
-    if (!searchQuery.trim()) {
-      alert('Please enter a location');
-      return;
-    }
-    setLoading(true);
-    try {
-      const geocodeResponse = await fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(searchQuery.trim())}.json?access_token=${MAPBOX_TOKEN}`
-      );
-      const geocodeData = await geocodeResponse.json();
-      
-      if (geocodeData.features && geocodeData.features.length > 0) {
-        const [lng, lat] = geocodeData.features[0].center;
-        if (mapRef.current) {
-          mapRef.current.flyTo({ center: [lng, lat], zoom: 13 });
-          addUserMarker(lat, lng);
-          searchNearbyHospitals(lat, lng);
-        }
-      } else {
-        alert('Location not found. Please try another search.');
-        setLoading(false);
-      }
-    } catch (e) {
-      console.error('Error searching location', e);
-      alert('Error searching location. Please try again.');
-      setLoading(false);
-    }
-  };
+  // Global function to open Google Maps
+  useEffect(() => {
+    window.openGoogleMaps = (lat, lng) => {
+      const origin = userLocation ? `${userLocation[1]},${userLocation[0]}` : '';
+      const destination = `${lat},${lng}`;
+      const url = origin
+        ? `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&travelmode=driving`
+        : `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+      window.open(url, '_blank');
+    };
 
-  // Add user location marker
-  const addUserMarker = (lat, lng) => {
-    if (!mapRef.current) return;
-    
-    // Remove existing user marker if any
-    if (userMarkerRef.current) {
-      userMarkerRef.current.remove();
-    }
-    
-    const el = document.createElement('div');
-    el.className = 'user-marker';
-    el.innerHTML = '📍';
-    el.style.fontSize = '32px';
-    
-    userMarkerRef.current = new window.mapboxgl.Marker({ element: el, anchor: 'bottom' })
-      .setLngLat([lng, lat])
-      .addTo(mapRef.current);
-  };
-
-  // Search for nearby hospitals
-  const searchNearbyHospitals = async (lat, lng) => {
-    try {
-      const response = await fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/hospital.json?proximity=${lng},${lat}&limit=10&types=poi&access_token=${MAPBOX_TOKEN}`
-      );
-      const data = await response.json();
-
-      // Clear existing hospital markers
-      markersRef.current.forEach(m => m.remove());
-      markersRef.current = [];
-
-      if (data.features && data.features.length > 0) {
-        data.features.forEach((feature, index) => {
-          const hospitalLng = feature.center[0];
-          const hospitalLat = feature.center[1];
-          const hospitalName = feature.text || feature.properties?.name || 'Hospital';
-          
-          // Create hospital marker
-          const el = document.createElement('div');
-          el.className = 'hospital-marker';
-          el.innerHTML = `<div class="marker-icon">${index + 1}</div>`;
-          
-          const marker = new window.mapboxgl.Marker(el)
-            .setLngLat([hospitalLng, hospitalLat])
-            .addTo(mapRef.current);
-          
-          // Click to open in Mapbox (new tab)
-          marker.getElement().addEventListener('click', () => {
-            const mapboxUrl = `https://www.mapbox.com/search/${hospitalLat},${hospitalLng}`;
-            window.open(mapboxUrl, '_blank');
-          });
-          
-          markersRef.current.push(marker);
-        });
-      }
-      
-      setLoading(false);
-    } catch (error) {
-      console.error('Error fetching hospitals:', error);
-      alert('Error fetching hospital data. Please try again.');
-      setLoading(false);
-    }
-  };
+    return () => {
+      delete window.openGoogleMaps;
+    };
+  }, [userLocation]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 pt-20 pb-12">
@@ -191,70 +216,75 @@ const HospitalFinder = () => {
               Find Nearby Hospitals
             </span>
           </h1>
-          <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">
-            Locate hospitals near you quickly and easily. Enter your location or use your current position.
+          <p className="text-base sm:text-lg text-muted-foreground max-w-3xl mx-auto">
+            Enter a location or use your GPS to find hospitals. Click on any hospital name on the map to get directions.
           </p>
         </div>
 
         {/* Search Section */}
         <div className="max-w-2xl mx-auto mb-8">
-          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-border/50">
-            <div className="space-y-4">
-              <Input
-                type="text"
-                placeholder="Enter your location (e.g., New Delhi, India)"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                className="w-full"
-              />
-              
-              <div className="flex flex-col sm:flex-row gap-3">
-                <Button
-                  onClick={handleSearch}
-                  disabled={loading}
-                  className="flex-1 gradient-primary text-white"
-                >
-                  <SearchIcon className="mr-2" />
-                  Search Hospitals
-                </Button>
-                <Button
-                  onClick={handleGetCurrentLocation}
-                  disabled={loading}
-                  variant="outline"
-                  className="flex-1 sm:flex-none"
-                >
-                  <MyLocationIcon className="mr-2" />
-                  Use My Location
-                </Button>
-              </div>
+            <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-border/50">
+                <div className="space-y-4">
+                    <div className="flex flex-col sm:flex-row gap-3 items-start">
+            <div className="flex-grow w-full">
+                            <Input
+                                type="text"
+                                placeholder="Enter your location (e.g., New Delhi)"
+                                value={searchQuery}
+                onChange={(e) => { setCommittedSearch(false); setSearchQuery(e.target.value); }}
+                                onFocus={() => setIsSuggestionsVisible(true)}
+                                onBlur={() => setTimeout(() => setIsSuggestionsVisible(false), 200)}
+                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleSearch(); } }}
+                                className="w-full"
+                            />
+                        </div>
+                        <Button
+                            onClick={handleGetCurrentLocation}
+                            disabled={loading}
+                            variant="outline"
+                            className="p-2 h-10 w-full sm:w-auto flex items-center justify-center"
+                        >
+              <MyLocationIcon className="mr-2" />
+              Detect My Location
+                        </Button>
+                    </div>
+                    
+                    {isSuggestionsVisible && suggestions.length > 0 && (
+                        <ul className="suggestions-list-static">
+                            {suggestions.map((suggestion) => (
+                                <li
+                                    key={suggestion.id}
+                                    onMouseDown={() => handleLocationSelect(suggestion.center[1], suggestion.center[0], suggestion.place_name)}
+                                >
+                                    {suggestion.place_name}
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                    
+                    <Button
+                        onClick={handleSearch}
+                        disabled={loading}
+                        className="w-full gradient-primary text-white"
+                    >
+                        <SearchIcon className="mr-2" />
+                        {loading ? 'Searching...' : 'Search'}
+                    </Button>
+                </div>
             </div>
-          </div>
         </div>
 
         {/* Map */}
         <div className="max-w-2xl mx-auto">
           <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl p-4 shadow-lg border border-border/50">
-            <div 
-              ref={mapContainerRef} 
-              className="w-full h-[400px] md:h-[500px] rounded-xl overflow-hidden"
+            <div
+              ref={mapContainer}
+              className="w-full h-[500px] md:h-[600px] rounded-xl overflow-hidden"
             />
-            {!mapLoaded && (
-              <div className="flex items-center justify-center h-[400px]">
-                <div className="text-center">
-                  <LocalHospitalIcon className="text-6xl text-primary mb-2 animate-pulse" />
-                  <p className="text-muted-foreground">Loading map...</p>
-                </div>
-              </div>
-            )}
           </div>
-
-          {loading && (
-            <div className="text-center py-6 mt-4 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl border border-border/50">
-              <LocalHospitalIcon className="text-4xl text-primary mb-2 animate-pulse" />
-              <p className="text-muted-foreground font-medium">Searching for hospitals...</p>
+           <div className="text-center mt-4 text-sm text-muted-foreground">
+              💡 Tip: Zoom in closer to see more hospitals and medical facilities appear on the map.
             </div>
-          )}
         </div>
       </div>
     </div>
