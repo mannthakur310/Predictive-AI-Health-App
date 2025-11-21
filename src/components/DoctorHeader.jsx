@@ -6,16 +6,27 @@ export default function DoctorHeader() {
   const navigate = useNavigate();
   const [doctorName, setDoctorName] = useState('');
   const [isDark, setIsDark] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    // Get doctor name from localStorage
-    const name = localStorage.getItem('doctorName') || 'Doctor';
-    setDoctorName(name);
+    // Check authentication status
+    const checkAuth = () => {
+      const authenticated = localStorage.getItem('doctorAuthenticated') === 'true';
+      setIsAuthenticated(authenticated);
+      if (authenticated) {
+        const name = localStorage.getItem('doctorName') || 'Doctor';
+        setDoctorName(name);
+      } else {
+        setDoctorName('');
+      }
+    };
+
+    // Initial check
+    checkAuth();
 
     // Listen for auth changes
     const handleAuthChange = () => {
-      const name = localStorage.getItem('doctorName') || 'Doctor';
-      setDoctorName(name);
+      checkAuth();
     };
 
     window.addEventListener('doctorAuthChanged', handleAuthChange);
@@ -77,11 +88,24 @@ export default function DoctorHeader() {
 
           {/* Right Side - Doctor Name, Dark Mode & Logout */}
           <div className="flex items-center gap-2 sm:gap-3">
-            <span className="hidden sm:inline-block text-sm text-muted-foreground">
-              <span className="font-semibold text-foreground">Dr. {doctorName}</span>
-            </span>
+            {/* Only show doctor name and logout when authenticated */}
+            {isAuthenticated && (
+              <>
+                <span className="hidden sm:inline-block text-sm text-muted-foreground">
+                  <span className="font-semibold text-foreground">Dr. {doctorName}</span>
+                </span>
+                
+                <Button 
+                  variant="outline" 
+                  onClick={handleLogout}
+                  className="px-3 sm:px-4 py-2 rounded-xl text-sm sm:text-base font-medium transition-all duration-300 hover:scale-105 border-2 text-gray-700 dark:text-gray-300 hover:text-primary hover:bg-white/60 dark:hover:bg-gray-800/60 shadow-modern"
+                >
+                  Logout
+                </Button>
+              </>
+            )}
             
-            {/* Dark Mode Toggle */}
+            {/* Dark Mode Toggle - Always visible */}
             <button
               onClick={toggleDarkMode}
               className="p-1.5 sm:p-2 rounded-xl bg-white/80 dark:bg-gray-800/80 hover:bg-white dark:hover:bg-gray-700 hover:scale-105 active:scale-95 transition-all duration-300 group shadow-modern flex items-center justify-center border border-gray-200/50 dark:border-gray-600/50"
@@ -105,14 +129,6 @@ export default function DoctorHeader() {
                 </svg>
               )}
             </button>
-
-            <Button 
-              variant="outline" 
-              onClick={handleLogout}
-              className="px-3 sm:px-4 py-2 rounded-xl text-sm sm:text-base font-medium transition-all duration-300 hover:scale-105 border-2 text-gray-700 dark:text-gray-300 hover:text-primary hover:bg-white/60 dark:hover:bg-gray-800/60 shadow-modern"
-            >
-              Logout
-            </Button>
           </div>
         </div>
       </div>

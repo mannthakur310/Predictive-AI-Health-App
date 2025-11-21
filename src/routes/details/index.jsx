@@ -154,10 +154,17 @@ const Details = () => {
       
       <Button
         type="submit"
-        className="w-full my-6 px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all duration-300 font-semibold disabled:bg-blue-300"
+        className="w-full my-6 px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all duration-300 font-semibold disabled:bg-blue-300 disabled:opacity-50"
         disabled={loading}
       >
-        {loading ? "Generating Report..." : "Generate Diagnosis Report"}
+        {loading ? (
+          <div className="flex items-center justify-center space-x-2">
+            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+            <span>Generating Report...</span>
+          </div>
+        ) : (
+          "Generate Diagnosis Report"
+        )}
       </Button>
     </form>
   );

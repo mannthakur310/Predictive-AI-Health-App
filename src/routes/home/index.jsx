@@ -5,10 +5,14 @@ import VaccinesIcon from '@mui/icons-material/Vaccines';
 import DirectionsRunIcon from '@mui/icons-material/DirectionsRun';
 import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
 import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
+import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
+import LocalHospitalIcon from '@mui/icons-material/LocalHospital';
+import VideoLibraryIcon from '@mui/icons-material/VideoLibrary';
 import { useUser } from '@clerk/clerk-react';
 import { useNavigate } from 'react-router-dom';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/services/firebaseConfig';
+import { blogPosts, getYouTubeEmbedUrl } from '@/data/blogData';
 
 const Home = () => {
   const { user, isSignedIn } = useUser();
@@ -20,71 +24,6 @@ const Home = () => {
   const [currentTime, setCurrentTime] = useState(Date.now());
 
   const FALLBACK_THUMBNAIL = 'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&w=900&q=80';
-
-  const blogPosts = [
-    {
-      id: 'precision-nutrition',
-      type: 'article',
-      title: 'Precision Nutrition: Tailoring Diets with AI Insights',
-      excerpt:
-        'Discover how predictive analytics personalizes your nutrition plan, ensuring every meal supports your wellness goals and medical profile.',
-      thumbnail: 'https://images.unsplash.com/photo-1514996937319-344454492b37?auto=format&fit=crop&w=900&q=80',
-      tags: ['Nutrition', 'AI Insights'],
-      updatedAt: '2025-11-01T08:30:00.000Z',
-    },
-    {
-      id: 'cardio-fitness',
-      type: 'video',
-      title: 'AI Coach: Smarter Cardio Routines for Every Age',
-      excerpt:
-        'Our clinical fitness expert walks through adaptive workout plans that change with your vitals and wearable data.',
-      thumbnail: 'https://images.unsplash.com/photo-1517832207067-4db24a2ae47c?auto=format&fit=crop&w=900&q=80',
-      mediaUrl: 'https://samplelib.com/lib/preview/mp4/sample-5s.mp4',
-      tags: ['Exercise', 'Wearables'],
-      updatedAt: '2025-11-06T10:15:00.000Z',
-    },
-    {
-      id: 'mental-wellbeing',
-      type: 'article',
-      title: 'Balancing Stress with Predictive Mental Health Support',
-      excerpt:
-        'See how Predictive keeps tabs on stress signals, flags burnout risks early, and connects you with guided coping strategies.',
-      thumbnail: 'https://images.unsplash.com/photo-1523978591478-c753949ff840?auto=format&fit=crop&w=900&q=80',
-      tags: ['Mental Health', 'Lifestyle'],
-      updatedAt: '2025-10-28T12:45:00.000Z',
-    },
-    {
-      id: 'telehealth-evolution',
-      type: 'article',
-      title: 'Telehealth 2.0: How Predictive Tools Transform Remote Care',
-      excerpt:
-        'Explore the latest advancements in remote patient monitoring, virtual triage, and AI-assisted consultations for reliable at-home care.',
-      thumbnail: 'https://images.unsplash.com/photo-1587502536263-929f6d27661a?auto=format&fit=crop&w=900&q=80',
-      tags: ['Telehealth', 'Innovation'],
-      updatedAt: '2025-11-05T07:20:00.000Z',
-    },
-    {
-      id: 'sleep-lab',
-      type: 'video',
-      title: 'Sleep Lab: Decoding Rest Patterns with Predictive AI',
-      excerpt:
-        'Sleep researcher Dr. Meera Singh walks through case studies where AI spotted apnea risks days before wearables did.',
-      thumbnail: 'https://images.unsplash.com/photo-1512314889357-e157c22f938d?auto=format&fit=crop&w=900&q=80',
-      mediaUrl: 'https://samplelib.com/lib/preview/mp4/sample-10s.mp4',
-      tags: ['Sleep', 'Chronic Care'],
-      updatedAt: '2025-11-03T22:05:00.000Z',
-    },
-    {
-      id: 'genomics-basics',
-      type: 'article',
-      title: 'Genomics 101: Making Sense of Predictive DNA Insights',
-      excerpt:
-        'Understand how Predictive translates raw genomic data into actionable health guidance and risk assessments that are easy to follow.',
-      thumbnail: 'https://images.unsplash.com/photo-1581091870622-4a44384f5584?auto=format&fit=crop&w=900&q=80',
-      tags: ['Genomics', 'Education'],
-      updatedAt: '2025-10-30T09:40:00.000Z',
-    },
-  ];
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -125,7 +64,13 @@ const Home = () => {
   const handleThumbnailError = (event) => {
     if (event?.currentTarget) {
       event.currentTarget.onerror = null;
-      event.currentTarget.src = FALLBACK_THUMBNAIL;
+      // Try to use hqdefault if maxresdefault fails (YouTube fallback)
+      const currentSrc = event.currentTarget.src;
+      if (currentSrc.includes('maxresdefault.jpg')) {
+        event.currentTarget.src = currentSrc.replace('maxresdefault.jpg', 'hqdefault.jpg');
+      } else {
+        event.currentTarget.src = FALLBACK_THUMBNAIL;
+      }
     }
   };
 
@@ -176,6 +121,24 @@ const Home = () => {
     }
   };
 
+  const keyFeatures = [
+    {
+      icon: <ChatBubbleOutlineIcon className="text-4xl text-primary" />,
+      title: "Chat with Doctor",
+      description: "Connect with certified healthcare professionals in real-time. Get instant medical advice and consultations from the comfort of your home."
+    },
+    {
+      icon: <LocalHospitalIcon className="text-4xl text-secondary" />,
+      title: "Find Nearby Hospital",
+      description: "Locate nearby hospitals and medical facilities instantly. Get directions and access emergency healthcare services when you need them most."
+    },
+    {
+      icon: <VideoLibraryIcon className="text-4xl text-primary" />,
+      title: "Health Education Videos",
+      description: "Access curated medical videos from trusted sources. Learn about health, wellness, and medical procedures from leading healthcare institutions."
+    }
+  ];
+
   const features = [
     {
       icon: <PanToolIcon className="text-4xl text-primary" />,
@@ -216,8 +179,9 @@ const Home = () => {
                   <span className="text-foreground">AI-Powered Health Care</span>
                 </h1>
                 <p className="text-base sm:text-lg lg:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto lg:mx-0">
-                  Revolutionizing healthcare with comprehensive, rapid AI diagnostic capabilities. 
-                  Get accurate multi-disease detection, prevention strategies, and personalized health support.
+                  Revolutionizing healthcare with comprehensive AI diagnostic capabilities, real-time doctor consultations, 
+                  hospital finder, and curated health education videos. Get accurate multi-disease detection, prevention strategies, 
+                  and personalized health support all in one platform.
                 </p>
               </div>
               
@@ -244,7 +208,10 @@ const Home = () => {
                     Chat with Doctor
                   </Button>
                   <Button
-                    onClick={() => navigate('/hospitals')}
+                    onClick={() => {
+                      if (!isSignedIn || !user) { setShowLoginPopup(true); return; }
+                      navigate('/hospitals');
+                    }}
                     variant="outline"
                     className="text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4 rounded-xl w-full"
                   >
@@ -308,15 +275,132 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="py-12 sm:py-16 lg:py-20 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm">
+      {/* Blogs Section */}
+      <section className="py-12 sm:py-16 lg:py-20 bg-muted/50 dark:bg-gray-800/50 border-t border-border/40">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-3xl mx-auto text-center mb-12 sm:mb-16 space-y-4">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground">
+              Health Education Videos
+            </h2>
+            <p className="text-base sm:text-lg text-muted-foreground">
+              Access curated medical videos from trusted healthcare institutions. Learn about health, wellness, emergency procedures, 
+              and medical best practices from leading experts in the field.
+            </p>
+          </div>
+
+          <div className="grid gap-8 sm:grid-cols-2 xl:grid-cols-3">
+            {blogPosts.map((post) => (
+              <article
+                key={post.id}
+                className="group flex flex-col bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-3xl overflow-hidden shadow-modern border border-border/40 hover:border-primary/40 hover:shadow-glow transition-all duration-300"
+              >
+                <div className="relative h-56 w-full overflow-hidden">
+                  {post.type === 'video' && activeVideoId === post.id ? (
+                    // YouTube video embed
+                    post.videoId ? (
+                      <iframe
+                        src={getYouTubeEmbedUrl(post.videoId)}
+                        title={post.title}
+                        className="w-full h-full"
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    ) : (
+                      // Regular video (for backwards compatibility)
+                      <video
+                        src={post.mediaUrl}
+                        controls
+                        autoPlay
+                        className="h-full w-full object-cover bg-black"
+                      />
+                    )
+                  ) : (
+                    <>
+                      <img
+                        src={post.thumbnail}
+                        alt={post.title}
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        loading="lazy"
+                        referrerPolicy="no-referrer"
+                        onError={handleThumbnailError}
+                      />
+                      {post.type === 'video' && (
+                        <button
+                          type="button"
+                          onClick={() => setActiveVideoId((prev) => (prev === post.id ? null : post.id))}
+                          className="absolute inset-0 flex items-center justify-center bg-black/40 text-white transition-opacity hover:bg-black/50"
+                          aria-label={activeVideoId === post.id ? 'Close video player' : 'Play health insights video'}
+                        >
+                          <PlayCircleOutlineIcon className="text-5xl drop-shadow-lg" />
+                        </button>
+                      )}
+                    </>
+                  )}
+                </div>
+
+                <div className="flex flex-1 flex-col p-6 sm:p-7 space-y-4">
+                  <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-primary/80">
+                    {post.tags.map((tag) => (
+                      <span
+                        key={`${post.id}-${tag}`}
+                        className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-[11px] font-semibold text-primary"
+                      >
+                        #{tag}
+                      </span>
+                    ))}
+                  </div>
+
+                  <div className="space-y-2">
+                    <h3 className="text-lg sm:text-xl font-semibold text-foreground">
+                      {post.title}
+                    </h3>
+                    <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
+                      {post.excerpt}
+                    </p>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Key Features Section */}
+      <section className="py-12 sm:py-16 lg:py-20 bg-white/30 dark:bg-gray-900/40 backdrop-blur-sm">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12 sm:mb-16">
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-4">
-              Comprehensive Health Solutions
+              Complete Healthcare Platform
             </h2>
             <p className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-3xl mx-auto">
-              Our AI-powered platform provides everything you need for optimal health management
+              Everything you need for comprehensive health management in one place
+            </p>
+          </div>
+
+          <div className="grid sm:grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 mb-16 sm:mb-20 lg:mb-24">
+            {keyFeatures.map((feature, index) => (
+              <div 
+                key={index}
+                className="group bg-gradient-to-br from-white to-muted/30 dark:from-gray-800 dark:to-gray-700/50 backdrop-blur-sm rounded-3xl p-6 sm:p-8 shadow-modern hover:shadow-glow transition-all duration-300 border-2 border-border/50 hover:border-primary/40 dark:border-gray-700/50 dark:hover:border-primary/40"
+              >
+                <div className="flex flex-col space-y-4">
+                  <div className="p-4 rounded-2xl bg-gradient-to-br from-primary/10 to-secondary/10 dark:from-primary/20 dark:to-secondary/20 w-fit group-hover:scale-110 transition-transform duration-300">
+                    {feature.icon}
+                  </div>
+                  <h3 className="text-xl sm:text-2xl font-bold text-foreground">{feature.title}</h3>
+                  <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">{feature.description}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="text-center mb-12 sm:mb-16">
+            <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground mb-4">
+              Comprehensive Health Solutions
+            </h3>
+            <p className="text-base sm:text-lg text-muted-foreground max-w-3xl mx-auto">
+              AI-powered insights for prevention, treatment, and wellness
             </p>
           </div>
 
@@ -348,97 +432,22 @@ const Home = () => {
             </h2>
             <div className="prose prose-sm sm:prose-base lg:prose-lg mx-auto text-muted-foreground leading-relaxed dark:prose-invert">
               <p>
-                Our platform is designed to help you gain clear and personalized insights about your health. Whether you want to stay proactive, understand common symptoms, or improve your daily wellness routine, we provide easy-to-use tools and reliable guidance to support your health journey.
+                Our comprehensive platform combines AI-powered diagnostics with real-time doctor consultations, hospital finder, 
+                and curated health education content. Whether you need instant medical advice, want to locate nearby healthcare facilities, 
+                or seek to educate yourself through trusted medical videos, Predictive provides all the tools you need for complete health management.
               </p>
               <p>
-                With 24*7 availability and instant analysis, Predictive ensures you always have access to helpful health information and recommendations. Your privacy and security are our top priorities, so your health data remains protected while you receive the care and support you need.
+                With 24/7 availability, instant AI analysis, and direct access to healthcare professionals, Predictive ensures you always 
+                have the support you need. Our platform integrates advanced diagnostics, telemedicine consultations, location services, 
+                and educational resources to create a truly comprehensive healthcare experience. Your privacy and security are our top priorities, 
+                so your health data remains protected while you receive the care and support you need.
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Blogs Section */}
-      <section className="py-12 sm:py-16 lg:py-20 bg-muted/30 dark:bg-gray-900/40 border-t border-border/40">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-3xl mx-auto text-center mb-12 sm:mb-16 space-y-4">
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground">
-              Fresh from the Predictive Health Desk
-            </h2>
-            <p className="text-base sm:text-lg text-muted-foreground">
-              Stay ahead with curated stories, clinical insights, and multimedia explainers that refresh as our experts publish new findings.
-            </p>
-          </div>
-
-          <div className="grid gap-8 sm:grid-cols-2 xl:grid-cols-3">
-            {blogPosts.map((post) => (
-              <article
-                key={post.id}
-                className="group flex flex-col bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-3xl overflow-hidden shadow-modern border border-border/40 hover:border-primary/40 hover:shadow-glow transition-all duration-300"
-              >
-                <div className="relative h-56 w-full overflow-hidden">
-                  {post.type === 'video' && activeVideoId === post.id ? (
-                    <video
-                      src={post.mediaUrl}
-                      controls
-                      autoPlay
-                      className="h-full w-full object-cover bg-black"
-                    />
-                  ) : (
-                    <>
-                      <img
-                        src={post.thumbnail}
-                        alt={post.title}
-                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                        loading="lazy"
-                        referrerPolicy="no-referrer"
-                        onError={handleThumbnailError}
-                      />
-                      {post.type === 'video' && (
-                        <button
-                          type="button"
-                          onClick={() => setActiveVideoId((prev) => (prev === post.id ? null : post.id))}
-                          className="absolute inset-0 flex items-center justify-center bg-black/40 text-white transition-opacity"
-                          aria-label={activeVideoId === post.id ? 'Close video player' : 'Play health insights video'}
-                        >
-                          <PlayCircleOutlineIcon className="text-5xl drop-shadow-lg" />
-                        </button>
-                      )}
-                    </>
-                  )}
-                </div>
-
-                <div className="flex flex-1 flex-col p-6 sm:p-7 space-y-4">
-                  <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-primary/80">
-                    {post.tags.map((tag) => (
-                      <span
-                        key={`${post.id}-${tag}`}
-                        className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-[11px] font-semibold text-primary"
-                      >
-                        #{tag}
-                      </span>
-                    ))}
-                  </div>
-
-                  <div className="space-y-2">
-                    <h3 className="text-lg sm:text-xl font-semibold text-foreground">
-                      {post.title}
-                    </h3>
-                    <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
-                      {post.excerpt}
-                    </p>
-                  </div>
-
-                  <div className="mt-auto flex items-center justify-between pt-2 text-xs sm:text-sm text-muted-foreground">
-                    <span>{post.type === 'video' ? 'Video' : 'Article'}</span>
-                    <span>Updated {getRelativeTime(post.updatedAt)}</span>
-                  </div>
-                </div>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
+      
     </div>
   );
 };

@@ -4,12 +4,23 @@ import cors from 'cors';
 import { Server } from 'socket.io';
 
 const app = express();
-app.use(cors({ origin: ['http://localhost:5173', 'http://localhost:5157'], credentials: true }));
+app.use(cors({ 
+  origin: [
+    'http://localhost:5173', 
+    'http://localhost:5157',
+    process.env.FRONTEND_URL || 'http://localhost:5173'
+  ], 
+  credentials: true 
+}));
 
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: ['http://localhost:5173', 'http://localhost:5157'],
+    origin: [
+      'http://localhost:5173', 
+      'http://localhost:5157',
+      process.env.FRONTEND_URL || 'http://localhost:5173'
+    ],
     methods: ['GET', 'POST']
   }
 });
@@ -131,7 +142,7 @@ io.on('connection', (socket) => {
     const leaver = by === 'doctor' ? 'doctor' : 'user';
     const partner = leaver === 'doctor' ? 'user' : 'doctor';
     // Notify partner that counterpart left
-    io.to(`chat:${chatId}`).emit('system:partner_left', { chatId, who: leaver, message: `${leaver} left the chat. ${partner} may now end chat.` });
+    io.to(`chat:${chatId}`).emit('system:partner_left', { chatId, who: leaver, message: `Chat Ended. You may now leave this chat.` });
     // If both already left, clean up
     if (leaver === 'doctor') mapping.doctorSocketId = undefined; else mapping.userSocketId = undefined;
     const bothGone = !mapping.userSocketId && !mapping.doctorSocketId;

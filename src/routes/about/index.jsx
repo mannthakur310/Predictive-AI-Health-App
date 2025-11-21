@@ -1,14 +1,32 @@
 import React from 'react';
-import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
 import ScienceIcon from '@mui/icons-material/Science';
 import PsychologyIcon from '@mui/icons-material/Psychology';
 import SecurityIcon from '@mui/icons-material/Security';
 import SpeedIcon from '@mui/icons-material/Speed';
-import GroupIcon from '@mui/icons-material/Group';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
+import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
+import LocalHospitalIcon from '@mui/icons-material/LocalHospital';
+import VideoLibraryIcon from '@mui/icons-material/VideoLibrary';
 
 const About = () => {
+  const keyFeatures = [
+    {
+      icon: <ChatBubbleOutlineIcon className="text-4xl text-primary" />,
+      title: "Chat with Doctor",
+      description: "Connect with certified healthcare professionals in real-time for instant medical advice and consultations"
+    },
+    {
+      icon: <LocalHospitalIcon className="text-4xl text-secondary" />,
+      title: "Find Nearby Hospital",
+      description: "Locate hospitals and medical facilities instantly with our integrated map-based search and directions"
+    },
+    {
+      icon: <VideoLibraryIcon className="text-4xl text-primary" />,
+      title: "Health Education Videos",
+      description: "Access curated medical videos from trusted healthcare institutions and leading medical experts"
+    }
+  ];
+
   const features = [
     {
       icon: <ScienceIcon className="text-4xl text-primary" />,
@@ -50,7 +68,8 @@ const About = () => {
             </h1>
             <p className="text-base sm:text-lg lg:text-xl text-muted-foreground leading-relaxed max-w-3xl mx-auto px-4">
               Revolutionizing healthcare through the power of artificial intelligence. 
-              We're committed to making advanced health diagnostics accessible to everyone.
+              We're committed to making advanced health diagnostics, real-time doctor consultations, 
+              hospital finder, and health education accessible to everyone in one comprehensive platform.
             </p>
           </div>
         </div>
@@ -66,25 +85,54 @@ const About = () => {
             <div className="prose prose-sm sm:prose-base lg:prose-lg mx-auto text-muted-foreground leading-relaxed dark:prose-invert px-4">
               <p>
                 At Predictive, we believe that everyone deserves access to advanced healthcare technology. 
-                Our mission is to democratize health diagnostics by leveraging cutting-edge AI to provide accurate, 
-                comprehensive, and personalized health insights to individuals worldwide.
+                Our mission is to democratize healthcare by leveraging cutting-edge AI diagnostics, real-time telemedicine consultations, 
+                hospital location services, and curated health education to provide comprehensive, personalized health solutions to individuals worldwide.
               </p>
               <p>
-                We bring carefully designed tool to create a platform that helps identify potential health concerns while offering practical recommendations for prevention and overall wellness improvement.
+                We've built a comprehensive platform that combines AI-powered diagnostics with real-time doctor consultations, 
+                hospital finder capabilities, and educational video content. Our platform helps identify potential health concerns, 
+                connects users with certified healthcare professionals, locates nearby medical facilities, and provides trusted educational 
+                resources—all while offering practical recommendations for prevention and overall wellness improvement.
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Technology Section */}
-      <section className="py-12 sm:py-16 lg:py-20">
+      {/* Key Features Section */}
+      <section className="py-12 sm:py-16 lg:py-20 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12 sm:mb-16">
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-4">
-              Our Technology
+              Our Key Features
             </h2>
             <p className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-3xl mx-auto">
+              Comprehensive healthcare solutions designed to meet all your medical needs
+            </p>
+          </div>
+
+          <div className="grid sm:grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 mb-16 sm:mb-20 lg:mb-24">
+            {keyFeatures.map((feature, index) => (
+              <div 
+                key={index}
+                className="group bg-gradient-to-br from-white to-muted/30 dark:from-gray-800 dark:to-gray-700/50 backdrop-blur-sm rounded-3xl p-6 sm:p-8 shadow-modern hover:shadow-glow transition-all duration-300 border-2 border-border/50 hover:border-primary/40 dark:border-gray-700/50 dark:hover:border-primary/40"
+              >
+                <div className="flex flex-col space-y-4">
+                  <div className="p-4 rounded-2xl bg-gradient-to-br from-primary/10 to-secondary/10 dark:from-primary/20 dark:to-secondary/20 w-fit group-hover:scale-110 transition-transform duration-300">
+                    {feature.icon}
+                  </div>
+                  <h3 className="text-xl sm:text-2xl font-bold text-foreground">{feature.title}</h3>
+                  <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">{feature.description}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="text-center mb-12 sm:mb-16">
+            <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground mb-4">
+              Our Technology
+            </h3>
+            <p className="text-base sm:text-lg text-muted-foreground max-w-3xl mx-auto">
               Built on the latest advancements in artificial intelligence
             </p>
           </div>

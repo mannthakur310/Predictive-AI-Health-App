@@ -27,7 +27,7 @@ Most Recent Diagnosis Summary : {recentDiagnosisSummary}
 Return a JSON object with this exact structure:
 
 {
-  "predictedDisease": ["<string>", …], // Contains two to three diseases with their probability and severity that the user might be suffering from according to profile, history and current symptoms.
+  "predictedDisease": ["<string>", …], // Contains two to three diseases that the user might be suffering from according to profile, history and current symptoms. The string should contain disease name followed by a brief descripton of it in easy language. Also specify the likelihood of each disease in few words.
   "personalizedGuidance": ["<string>", …], 
   "preventionStrategies": ["<string>", ...],
   "recommendedExercise": ["<string>", ...],
@@ -38,7 +38,7 @@ Return a JSON object with this exact structure:
 }
 
 - All fields must always be present, even if data is missing (use empty string, null, or placeholder).
-- The data should not be too lengthy, keep it small and concise.
+- The data should not be too lengthy. It should be concise and easy to understand for a normal person without medical background.
 - The response must be valid JSON, parsable by JSON.parse in JavaScript.
 - Do NOT include any explanation or text outside the JSON.
 - Do NOT include any citations, text formatting (like bold, italic etc).
